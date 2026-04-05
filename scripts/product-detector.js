@@ -115,6 +115,7 @@ function detectProducts(title, content, sourceUrl, existingNames = []) {
       pricechartingSet,
       pricechartingProduct: type.slug,
       chaseCard,
+      skus: { pokemonCenter: 'TBD', target: 'TBD', walmart: 'TBD', amazon: 'TBD' },
       autoDetected: true,
       sourceUrl,
       detectedAt: new Date().toISOString(),

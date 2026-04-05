@@ -18,6 +18,7 @@ const PRODUCTS = [
     pricechartingSet: 'pokemon-scarlet-violet-prismatic-evolutions',
     pricechartingProduct: 'elite-trainer-box',
     chaseCard: 'Umbreon ex #161 SIR',
+    skus: { pokemonCenter: 'TBD', target: 'TBD', walmart: 'TBD', amazon: 'TBD' },
   },
   {
     name: 'Prismatic Evolutions Super Premium Collection',
@@ -27,6 +28,7 @@ const PRODUCTS = [
     pricechartingSet: 'pokemon-scarlet-violet-prismatic-evolutions',
     pricechartingProduct: 'super-premium-collection',
     chaseCard: 'Umbreon ex #161 SIR',
+    skus: { pokemonCenter: 'TBD', target: 'TBD', walmart: 'TBD', amazon: 'TBD' },
   },
   {
     name: 'Prismatic Evolutions Booster Bundle',
@@ -36,6 +38,7 @@ const PRODUCTS = [
     pricechartingSet: 'pokemon-scarlet-violet-prismatic-evolutions',
     pricechartingProduct: 'booster-bundle',
     chaseCard: 'Umbreon ex #161 SIR',
+    skus: { pokemonCenter: 'TBD', target: 'TBD', walmart: 'TBD', amazon: 'TBD' },
   },
   {
     name: 'Destined Rivals ETB',
@@ -45,6 +48,7 @@ const PRODUCTS = [
     pricechartingSet: 'pokemon-scarlet-violet-destined-rivals',
     pricechartingProduct: 'elite-trainer-box',
     chaseCard: "Ethan's Ho-Oh ex #230",
+    skus: { pokemonCenter: 'TBD', target: 'TBD', walmart: 'TBD', amazon: 'TBD' },
   },
   {
     name: 'Destined Rivals Booster Bundle',
@@ -54,6 +58,7 @@ const PRODUCTS = [
     pricechartingSet: 'pokemon-scarlet-violet-destined-rivals',
     pricechartingProduct: 'booster-bundle',
     chaseCard: "Ethan's Ho-Oh ex #230",
+    skus: { pokemonCenter: 'TBD', target: 'TBD', walmart: 'TBD', amazon: 'TBD' },
   },
   {
     name: 'Destined Rivals Booster Box',
@@ -63,6 +68,7 @@ const PRODUCTS = [
     pricechartingSet: 'pokemon-scarlet-violet-destined-rivals',
     pricechartingProduct: 'booster-box',
     chaseCard: "Ethan's Ho-Oh ex #230",
+    skus: { pokemonCenter: 'TBD', target: 'TBD', walmart: 'TBD', amazon: 'TBD' },
   },
   {
     name: '30th Anniversary First Partner Collection Series 1',
@@ -72,6 +78,7 @@ const PRODUCTS = [
     pricechartingSet: 'pokemon-30th-anniversary',
     pricechartingProduct: 'first-partner-collection-series-1',
     chaseCard: 'TBD',
+    skus: { pokemonCenter: 'TBD', target: 'TBD', walmart: 'TBD', amazon: 'TBD' },
   },
   {
     name: 'Journey Together ETB',
@@ -81,6 +88,7 @@ const PRODUCTS = [
     pricechartingSet: 'pokemon-scarlet-violet-journey-together',
     pricechartingProduct: 'elite-trainer-box',
     chaseCard: "N's SIR",
+    skus: { pokemonCenter: 'TBD', target: 'TBD', walmart: 'TBD', amazon: 'TBD' },
   },
   {
     name: 'Journey Together Booster Bundle',
@@ -90,6 +98,7 @@ const PRODUCTS = [
     pricechartingSet: 'pokemon-scarlet-violet-journey-together',
     pricechartingProduct: 'booster-bundle',
     chaseCard: "N's SIR",
+    skus: { pokemonCenter: 'TBD', target: 'TBD', walmart: 'TBD', amazon: 'TBD' },
   },
   {
     name: 'Ascended Heroes ETB',
@@ -99,6 +108,7 @@ const PRODUCTS = [
     pricechartingSet: 'pokemon-ascended-heroes',
     pricechartingProduct: 'elite-trainer-box',
     chaseCard: 'TBD',
+    skus: { pokemonCenter: 'TBD', target: 'TBD', walmart: 'TBD', amazon: 'TBD' },
   },
   {
     name: 'Mega Evolution Chaos Rising ETB',
@@ -108,6 +118,7 @@ const PRODUCTS = [
     pricechartingSet: 'pokemon-mega-evolution-chaos-rising',
     pricechartingProduct: 'elite-trainer-box',
     chaseCard: 'TBD',
+    skus: { pokemonCenter: 'TBD', target: 'TBD', walmart: 'TBD', amazon: 'TBD' },
   },
 ];
 

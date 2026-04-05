@@ -170,9 +170,18 @@ function buildWeeklyReportEmbed(entries) {
     const pricechartingUrl = `https://www.pricecharting.com/game/${product.pricechartingSet}/${product.pricechartingProduct}`;
     const ebayUrl = `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(product.ebaySearchTerm + ' sealed')}&LH_Sold=1&LH_Complete=1&_sop=13`;
 
+    const skus = product.skus || {};
+    const skuLine = [
+      `PKC: ${skus.pokemonCenter || 'TBD'}`,
+      `TGT: ${skus.target || 'TBD'}`,
+      `WMT: ${skus.walmart || 'TBD'}`,
+      `AMZ: ${skus.amazon || 'TBD'}`,
+    ].join(' · ');
+
     return [
       `${tierEmoji} **${product.name}**${chase} — [PC](${pricechartingUrl}) · [eBay](${ebayUrl})`,
       `${progressBar(sentiment.score)} ${sentiment.score}/100 | MSRP $${product.msrp.toFixed(2)} | PC ${pcText}${marginText} | ${rec}`,
+      `🏬 ${skuLine}`,
     ].join('\n');
   };
 
