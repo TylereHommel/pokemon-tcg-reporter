@@ -67,13 +67,13 @@ function extractDomain(urlStr) {
 }
 
 /**
- * Build a filled progress bar for a 0–100 score.
+ * Build a filled progress bar for a 0–100 score using emoji squares.
  * @param {number} score
- * @returns {string}  e.g. "████████░░"
+ * @returns {string}  e.g. "🟩🟩🟩🟩🟩🟩🟩🟩⬛⬛"
  */
 function progressBar(score) {
   const filled = Math.round(score / 10);
-  return '█'.repeat(filled) + '░'.repeat(10 - filled);
+  return '🟩'.repeat(filled) + '⬛'.repeat(10 - filled);
 }
 
 /**
@@ -177,6 +177,9 @@ function buildWeeklyProductEmbed(product, pricing, sentiment) {
     priceLines.push(`📈 \`Flip Margin:     \` +${pricing.avgMargin.toFixed(0)}% (avg)${recentStr}`);
   }
 
+  const pricechartingUrl = `https://www.pricecharting.com/game/${product.pricechartingSet}/${product.pricechartingProduct}`;
+  const ebayUrl = `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(product.ebaySearchTerm + ' sealed')}&LH_Sold=1&LH_Complete=1&_sop=13`;
+
   const description = [
     `Hype: ${progressBar(sentiment.score)} ${sentiment.score}/100 | Bias: ${sentiment.biasScore}/100`,
     product.chaseCard && product.chaseCard !== 'TBD' ? `🃏 Chase: ${product.chaseCard}` : '',
@@ -184,6 +187,8 @@ function buildWeeklyProductEmbed(product, pricing, sentiment) {
     priceLines.join('\n'),
     '',
     rec,
+    '',
+    `🔗 [PriceCharting](${pricechartingUrl}) · [eBay Sold](${ebayUrl})`,
   ].filter(l => l !== '').join('\n');
 
   return {
