@@ -79,12 +79,9 @@ async function main() {
   }
   console.log(`[weekly-report] Got ${allResults.length} sentiment results`);
 
-  // Post header
-  await postWebhook(buildWeeklyHeaderEmbed());
-  await sleep(1000);
-
-  // Process Tier 1 products first, then Tier 2
+  // Build all embeds — header first, then products sorted by tier
   const sortedProducts = [...PRODUCTS].sort((a, b) => a.tier - b.tier);
+  const allEmbeds = [buildWeeklyHeaderEmbed().embeds[0]];
 
   for (const product of sortedProducts) {
     console.log(`[weekly-report] Processing: ${product.name}`);
@@ -96,12 +93,17 @@ async function main() {
     const pricing = fetchPricing(product);
     console.log(`  Pricing: pricecharting=$${pricing.pricechartingValue}, avg10=$${pricing.avgLast10}`);
 
-    const payload = buildWeeklyProductEmbed(product, pricing, sentiment);
-    await postWebhook(payload);
-    await sleep(1200); // Rate limit buffer between Discord posts
+    allEmbeds.push(buildWeeklyProductEmbed(product, pricing, sentiment).embeds[0]);
   }
 
-  console.log('[weekly-report] All products posted. Done.');
+  // Post in batches of 10 (Discord limit per message)
+  for (let i = 0; i < allEmbeds.length; i += 10) {
+    const batch = allEmbeds.slice(i, i + 10);
+    await postWebhook({ embeds: batch });
+    if (i + 10 < allEmbeds.length) await sleep(1000);
+  }
+
+  console.log('[weekly-report] Done — posted', allEmbeds.length, 'embeds.');
 }
 
 main().catch(err => {
