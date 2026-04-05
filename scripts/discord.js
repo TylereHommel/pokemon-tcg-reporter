@@ -185,23 +185,25 @@ function buildWeeklyReportEmbed(entries) {
     ].join('\n');
   };
 
-  const lines = [
-    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-    'Sourced from Reddit · TCGPlayer · PriceCharting · eBay',
-    '',
-    '**— TIER 1 —**',
-    ...tier1.map(formatEntry).flatMap(l => [l, '']),
-    '**— TIER 2 —**',
-    ...tier2.map(formatEntry).flatMap(l => [l, '']),
-  ];
+  const header = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSourced from Reddit · TCGPlayer · PriceCharting · eBay';
+
+  const tier1Lines = ['**— TIER 1 —**', ...tier1.map(formatEntry).flatMap(l => [l, ''])];
+  const tier2Lines = ['**— TIER 2 —**', ...tier2.map(formatEntry).flatMap(l => [l, ''])];
 
   return {
-    embeds: [{
-      title: `🎯 WEEKLY TCG SENTIMENT REPORT — ${formatDate()}`,
-      description: lines.join('\n').trimEnd(),
-      color: 0x9B59B6,
-      timestamp: new Date().toISOString(),
-    }],
+    embeds: [
+      {
+        title: `🎯 WEEKLY TCG SENTIMENT REPORT — ${formatDate()}`,
+        description: [header, '', ...tier1Lines].join('\n').trimEnd(),
+        color: 0x9B59B6,
+        timestamp: new Date().toISOString(),
+      },
+      {
+        description: tier2Lines.join('\n').trimEnd(),
+        color: 0x9B59B6,
+        timestamp: new Date().toISOString(),
+      },
+    ],
   };
 }
 
