@@ -1,0 +1,17 @@
+{
+  "name": "pokemon-tcg-discord-reporter",
+  "version": "1.0.0",
+  "description": "Automated Pokemon TCG sentiment reporter for Discord",
+  "main": "scripts/weekly-report.js",
+  "scripts": {
+    "weekly": "node scripts/weekly-report.js",
+    "monitor": "node scripts/news-monitor.js",
+    "digest": "node scripts/daily-digest.js",
+    "test:classify": "node scripts/classify.js --test",
+    "test:discord": "node scripts/discord.js --test",
+    "test:pricing": "node scripts/pricing.js --test"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
