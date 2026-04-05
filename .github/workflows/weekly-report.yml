@@ -1,0 +1,31 @@
+name: Weekly Report
+
+on:
+  schedule:
+    - cron: '0 17 * * 0'      # Sundays at 17:00 UTC (9am PST)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30        # pricing fetches can be slow
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Firecrawl CLI
+        run: npm install -g firecrawl-cli
+
+      - name: Run weekly report
+        env:
+          FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API_KEY }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: node scripts/weekly-report.js
