@@ -4,7 +4,7 @@
 
 const { search } = require('./firecrawl');
 const { fetchPricing } = require('./pricing');
-const { postWebhook, buildWeeklyHeaderEmbed, buildWeeklyProductEmbed } = require('./discord');
+const { postWebhook, buildWeeklyReportEmbed } = require('./discord');
 const { PRODUCTS } = require('./products');
 
 const POSITIVE_KEYWORDS = [
@@ -55,10 +55,6 @@ function scoreSentiment(results, product) {
   return { score, biasScore };
 }
 
-// Pause between Discord posts to avoid rate limiting (Discord allows ~5 webhooks/2s)
-function sleep(ms) {
-  return new Promise(r => setTimeout(r, ms));
-}
 
 async function main() {
   console.log('[weekly-report] Starting run at', new Date().toISOString());
@@ -79,9 +75,9 @@ async function main() {
   }
   console.log(`[weekly-report] Got ${allResults.length} sentiment results`);
 
-  // Build all embeds — header first, then products sorted by tier
+  // Process all products, sorted by tier
   const sortedProducts = [...PRODUCTS].sort((a, b) => a.tier - b.tier);
-  const allEmbeds = [buildWeeklyHeaderEmbed().embeds[0]];
+  const entries = [];
 
   for (const product of sortedProducts) {
     console.log(`[weekly-report] Processing: ${product.name}`);
@@ -93,17 +89,12 @@ async function main() {
     const pricing = fetchPricing(product);
     console.log(`  Pricing: pricecharting=$${pricing.pricechartingValue}, avg10=$${pricing.avgLast10}`);
 
-    allEmbeds.push(buildWeeklyProductEmbed(product, pricing, sentiment).embeds[0]);
+    entries.push({ product, pricing, sentiment });
   }
 
-  // Post in batches of 10 (Discord limit per message)
-  for (let i = 0; i < allEmbeds.length; i += 10) {
-    const batch = allEmbeds.slice(i, i + 10);
-    await postWebhook({ embeds: batch });
-    if (i + 10 < allEmbeds.length) await sleep(1000);
-  }
-
-  console.log('[weekly-report] Done — posted', allEmbeds.length, 'embeds.');
+  // Post all products in a single Discord message
+  await postWebhook(buildWeeklyReportEmbed(entries));
+  console.log('[weekly-report] Done — posted', entries.length, 'products in one message.');
 }
 
 main().catch(err => {

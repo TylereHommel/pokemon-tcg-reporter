@@ -144,71 +144,52 @@ function buildDigestEmbed(items) {
 }
 
 /**
- * Weekly product embed (red for tier 1, orange for tier 2).
- * @param {object} product  From products.js
- * @param {{ mostRecentSale: {price:number,date:string}|null, avgLast10: number|null, pricechartingValue: number|null, avgMargin: number|null, recentMargin: number|null }} pricing
- * @param {{ score: number, biasScore: number }} sentiment
+ * Single consolidated weekly report embed (purple).
+ * All products summarized in one Discord message.
+ * @param {{ product: object, pricing: object, sentiment: object }[]} entries
  * @returns {object}  Discord webhook payload
  */
-function buildWeeklyProductEmbed(product, pricing, sentiment) {
-  const tierEmoji = product.tier === 1 ? '🔴' : '🟡';
-  const rec = sentiment.score >= 70 ? '✅ **CHASE**'
-            : sentiment.score >= 40 ? '🟡 **HOLD**'
-            : '❌ **SKIP**';
+function buildWeeklyReportEmbed(entries) {
+  const tier1 = entries.filter(e => e.product.tier === 1);
+  const tier2 = entries.filter(e => e.product.tier === 2);
 
-  const priceLines = [`💰 \`MSRP:            \` $${product.msrp.toFixed(2)}`];
-
-  if (pricing.mostRecentSale) {
-    priceLines.push(`📦 \`Most Recent Sale:\` $${pricing.mostRecentSale.price.toFixed(2)} (${pricing.mostRecentSale.date})`);
-  } else {
-    priceLines.push(`📦 \`Most Recent Sale:\` N/A`);
-  }
-
-  if (pricing.avgLast10 != null) {
-    priceLines.push(`📊 \`10-Sale Avg:     \` $${pricing.avgLast10.toFixed(2)}`);
-  }
-  if (pricing.pricechartingValue != null) {
-    priceLines.push(`🏪 \`PriceCharting:   \` $${pricing.pricechartingValue.toFixed(2)}`);
-  }
-  if (pricing.avgMargin != null) {
-    const recentStr = pricing.recentMargin != null
-      ? ` | +${pricing.recentMargin.toFixed(0)}% (recent)`
+  const formatEntry = ({ product, pricing, sentiment }) => {
+    const tierEmoji = product.tier === 1 ? '🔴' : '🟡';
+    const rec = sentiment.score >= 70 ? '✅ CHASE'
+              : sentiment.score >= 40 ? '🟡 HOLD'
+              : '❌ SKIP';
+    const pcText = pricing.pricechartingValue != null
+      ? `$${pricing.pricechartingValue.toFixed(2)}`
+      : 'N/A';
+    const marginText = pricing.avgMargin != null
+      ? ` (+${pricing.avgMargin.toFixed(0)}%)`
       : '';
-    priceLines.push(`📈 \`Flip Margin:     \` +${pricing.avgMargin.toFixed(0)}% (avg)${recentStr}`);
-  }
+    const chase = product.chaseCard && product.chaseCard !== 'TBD'
+      ? ` · 🃏 ${product.chaseCard}`
+      : '';
+    const pricechartingUrl = `https://www.pricecharting.com/game/${product.pricechartingSet}/${product.pricechartingProduct}`;
+    const ebayUrl = `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(product.ebaySearchTerm + ' sealed')}&LH_Sold=1&LH_Complete=1&_sop=13`;
 
-  const pricechartingUrl = `https://www.pricecharting.com/game/${product.pricechartingSet}/${product.pricechartingProduct}`;
-  const ebayUrl = `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(product.ebaySearchTerm + ' sealed')}&LH_Sold=1&LH_Complete=1&_sop=13`;
-
-  const description = [
-    `Hype: ${progressBar(sentiment.score)} ${sentiment.score}/100 | Bias: ${sentiment.biasScore}/100`,
-    product.chaseCard && product.chaseCard !== 'TBD' ? `🃏 Chase: ${product.chaseCard}` : '',
-    '',
-    priceLines.join('\n'),
-    '',
-    rec,
-    '',
-    `🔗 [PriceCharting](${pricechartingUrl}) · [eBay Sold](${ebayUrl})`,
-  ].filter(l => l !== '').join('\n');
-
-  return {
-    embeds: [{
-      title: `${tierEmoji} TIER ${product.tier} — ${product.name}`,
-      description,
-      color: product.tier === 1 ? 0xFF4444 : 0xFFAA00,
-      timestamp: new Date().toISOString(),
-    }],
+    return [
+      `${tierEmoji} **${product.name}**${chase} — [PC](${pricechartingUrl}) · [eBay](${ebayUrl})`,
+      `${progressBar(sentiment.score)} ${sentiment.score}/100 | MSRP $${product.msrp.toFixed(2)} | PC ${pcText}${marginText} | ${rec}`,
+    ].join('\n');
   };
-}
 
-/**
- * Weekly report header embed (purple).
- */
-function buildWeeklyHeaderEmbed() {
+  const lines = [
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    'Sourced from Reddit · TCGPlayer · PriceCharting · eBay',
+    '',
+    '**— TIER 1 —**',
+    ...tier1.map(formatEntry).flatMap(l => [l, '']),
+    '**— TIER 2 —**',
+    ...tier2.map(formatEntry).flatMap(l => [l, '']),
+  ];
+
   return {
     embeds: [{
       title: `🎯 WEEKLY TCG SENTIMENT REPORT — ${formatDate()}`,
-      description: 'Sourced from Reddit · TCGPlayer · PriceCharting · eBay\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      description: lines.join('\n').trimEnd(),
       color: 0x9B59B6,
       timestamp: new Date().toISOString(),
     }],
@@ -232,7 +213,6 @@ module.exports = {
   postWebhook,
   buildBreakingEmbed,
   buildDigestEmbed,
-  buildWeeklyProductEmbed,
-  buildWeeklyHeaderEmbed,
+  buildWeeklyReportEmbed,
   formatDate,
 };
