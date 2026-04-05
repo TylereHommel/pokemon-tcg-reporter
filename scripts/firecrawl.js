@@ -88,7 +88,7 @@ function browserScrape(url) {
       env: process.env,
       stdio: ['ignore', 'ignore', 'pipe'],
     });
-    execSync(`firecrawl browser "scrape" -o ${JSON.stringify(out)}`, {
+    execSync(`firecrawl browser "scrape --only-main-content" -o ${JSON.stringify(out)}`, {
       env: process.env,
       stdio: ['ignore', 'ignore', 'pipe'],
     });
