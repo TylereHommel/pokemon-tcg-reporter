@@ -6,13 +6,22 @@
 
 const path = require('path');
 const fs = require('fs');
-const { search } = require('./firecrawl');
+const { search, scrape } = require('./firecrawl');
 const { classifyItem } = require('./classify');
-const { postWebhook, buildBreakingEmbed } = require('./discord');
-const { PRODUCTS } = require('./products');
+const { postWebhook, buildBreakingEmbed, buildNewProductEmbed } = require('./discord');
+const { getAllProducts } = require('./products');
+const { detectProducts } = require('./product-detector');
 
 const SEEN_URLS_PATH = path.join(__dirname, '..', 'state', 'seen-urls.json');
 const MINOR_QUEUE_PATH = path.join(__dirname, '..', 'state', 'minor-queue.json');
+const DYNAMIC_PRODUCTS_PATH = path.join(__dirname, '..', 'state', 'dynamic-products.json');
+
+// Keywords that suggest a new sealed product is being announced
+const NEW_PRODUCT_PATTERNS = [
+  'new set announced', 'set announced', 'new expansion', 'expansion announced',
+  'release date confirmed', 'new collection announced', 'new products revealed',
+  'pokemon tcg announces', 'booster box announced', 'etb announced',
+];
 
 function loadState(filePath, fallback) {
   try {
@@ -32,10 +41,33 @@ function saveState(filePath, data) {
  * @returns {object|null}
  */
 function matchProduct(item) {
+  const products = getAllProducts();
   const text = `${item.title} ${item.description || ''}`.toLowerCase();
-  return PRODUCTS.find(p =>
+  return products.find(p =>
     text.includes(p.name.toLowerCase().split(' ').slice(0, 2).join(' '))
   ) || null;
+}
+
+/**
+ * Load dynamic products state file.
+ * @returns {object[]}
+ */
+function loadDynamicProducts() {
+  try {
+    return JSON.parse(fs.readFileSync(DYNAMIC_PRODUCTS_PATH, 'utf8'));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Check if a news item looks like a new sealed product announcement.
+ * @param {{ title: string, description: string }} item
+ * @returns {boolean}
+ */
+function isNewProductAnnouncement(item) {
+  const text = `${item.title} ${item.description || ''}`.toLowerCase();
+  return NEW_PRODUCT_PATTERNS.some(p => text.includes(p));
 }
 
 async function main() {
@@ -78,6 +110,9 @@ async function main() {
 
   let breakingCount = 0;
   let minorCount = 0;
+  const dynamicProducts = loadDynamicProducts();
+  const existingNames = getAllProducts().map(p => p.name.toLowerCase());
+  let dynamicUpdated = false;
 
   for (const item of newItems) {
     const classification = classifyItem(item);
@@ -85,13 +120,34 @@ async function main() {
 
     if (classification === 'BREAKING') {
       console.log(`[news-monitor] BREAKING: ${item.title}`);
+
+      // Post the breaking news alert
       const matchedProduct = matchProduct(item);
-      const payload = buildBreakingEmbed(item, matchedProduct);
       try {
-        await postWebhook(payload);
+        await postWebhook(buildBreakingEmbed(item, matchedProduct));
         breakingCount++;
       } catch (err) {
         console.error('[news-monitor] Failed to post breaking alert:', err.message);
+      }
+
+      // Check if this looks like a new product announcement — scrape and detect
+      if (isNewProductAnnouncement(item)) {
+        console.log(`[news-monitor] Scanning for new products in: ${item.url}`);
+        const content = scrape(item.url);
+        const detected = detectProducts(item.title, content, item.url, existingNames);
+
+        for (const product of detected) {
+          console.log(`[news-monitor] New product found: ${product.name}`);
+          dynamicProducts.push(product);
+          existingNames.push(product.name.toLowerCase());
+          dynamicUpdated = true;
+
+          try {
+            await postWebhook(buildNewProductEmbed(product));
+          } catch (err) {
+            console.error('[news-monitor] Failed to post new product alert:', err.message);
+          }
+        }
       }
     } else {
       console.log(`[news-monitor] MINOR: ${item.title}`);
@@ -108,6 +164,10 @@ async function main() {
   // Save updated state
   saveState(SEEN_URLS_PATH, [...seenUrls]);
   saveState(MINOR_QUEUE_PATH, minorQueue);
+  if (dynamicUpdated) {
+    saveState(DYNAMIC_PRODUCTS_PATH, dynamicProducts);
+    console.log(`[news-monitor] Saved ${dynamicProducts.length} dynamic products`);
+  }
 
   console.log(`[news-monitor] Done. Breaking: ${breakingCount}, Minor queued: ${minorCount}`);
 }

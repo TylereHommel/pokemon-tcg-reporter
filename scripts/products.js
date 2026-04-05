@@ -1,7 +1,13 @@
 // scripts/products.js
-// Product watchlist. Update this file when new sets release.
+// Static product watchlist. Update this file when new sets release.
+// Auto-detected products are stored in state/dynamic-products.json and merged via getAllProducts().
 // pricechartingSlug: the URL segment from pricecharting.com/game/pokemon-{slug}/{product-slug}
 // ebaySearchTerm: used to build the eBay sold listing search URL
+
+const path = require('path');
+const fs = require('fs');
+
+const DYNAMIC_PRODUCTS_PATH = path.join(__dirname, '..', 'state', 'dynamic-products.json');
 
 const PRODUCTS = [
   {
@@ -105,4 +111,20 @@ const PRODUCTS = [
   },
 ];
 
-module.exports = { PRODUCTS };
+/**
+ * Returns static watchlist merged with auto-detected products from dynamic-products.json.
+ * Deduplicates by name (case-insensitive).
+ */
+function getAllProducts() {
+  let dynamic = [];
+  try {
+    dynamic = JSON.parse(fs.readFileSync(DYNAMIC_PRODUCTS_PATH, 'utf8'));
+  } catch {
+    // file missing or empty — treat as no dynamic products
+  }
+  const staticNames = new Set(PRODUCTS.map(p => p.name.toLowerCase()));
+  const newDynamic = dynamic.filter(p => !staticNames.has(p.name.toLowerCase()));
+  return [...PRODUCTS, ...newDynamic];
+}
+
+module.exports = { PRODUCTS, getAllProducts };

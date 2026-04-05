@@ -196,6 +196,32 @@ function buildWeeklyReportEmbed(entries) {
   };
 }
 
+/**
+ * New product auto-detected embed (green).
+ * @param {object} product  Auto-detected product object
+ * @returns {object}  Discord webhook payload
+ */
+function buildNewProductEmbed(product) {
+  const msrpText = product.msrp != null ? `$${product.msrp.toFixed(2)}` : 'TBD';
+  const chase = product.chaseCard && product.chaseCard !== 'TBD' ? product.chaseCard : 'Not yet revealed';
+
+  return {
+    embeds: [{
+      title: `🆕 NEW PRODUCT DETECTED — ${product.name}`,
+      description: [
+        `💰 MSRP: ${msrpText}`,
+        `🃏 Chase Card: ${chase}`,
+        `🏷️ Auto-assigned Tier 2`,
+        `🔗 Source: [${extractDomain(product.sourceUrl)}](${product.sourceUrl})`,
+        '',
+        '_Added to weekly tracking automatically._',
+      ].join('\n'),
+      color: 0x2ECC71,
+      timestamp: new Date().toISOString(),
+    }],
+  };
+}
+
 // ─── Self-test (run with: node scripts/discord.js --test) ────────────────────
 if (process.argv.includes('--test')) {
   (async () => {
@@ -214,5 +240,6 @@ module.exports = {
   buildBreakingEmbed,
   buildDigestEmbed,
   buildWeeklyReportEmbed,
+  buildNewProductEmbed,
   formatDate,
 };

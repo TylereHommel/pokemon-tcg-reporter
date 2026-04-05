@@ -5,7 +5,7 @@
 const { search } = require('./firecrawl');
 const { fetchPricing } = require('./pricing');
 const { postWebhook, buildWeeklyReportEmbed } = require('./discord');
-const { PRODUCTS } = require('./products');
+const { getAllProducts } = require('./products');
 
 const POSITIVE_KEYWORDS = [
   'chase', 'hype', 'hot', 'sold out', 'flipping', 'profit', 'invest',
@@ -75,8 +75,8 @@ async function main() {
   }
   console.log(`[weekly-report] Got ${allResults.length} sentiment results`);
 
-  // Process all products, sorted by tier
-  const sortedProducts = [...PRODUCTS].sort((a, b) => a.tier - b.tier);
+  // Process all products (static + auto-detected), sorted by tier
+  const sortedProducts = [...getAllProducts()].sort((a, b) => a.tier - b.tier);
   const entries = [];
 
   for (const product of sortedProducts) {
