@@ -3,14 +3,17 @@
 // Detects: ETB, Booster Box, Booster Bundle, Premium Collection, Super Premium Collection.
 // Returns array of product objects ready to add to the watchlist.
 
-// Order matters — check Super Premium before Premium to avoid partial match
+// Order matters — check more specific types before generic ones to avoid partial matches
 const COLLECTION_TYPES = [
-  { patterns: ['super premium collection'],        label: 'Super Premium Collection', slug: 'super-premium-collection', defaultMsrp: 79.99  },
-  { patterns: ['premium collection'],              label: 'Premium Collection',       slug: 'premium-collection',       defaultMsrp: 39.99  },
-  { patterns: ['elite trainer box', ' etb '],      label: 'ETB',                      slug: 'elite-trainer-box',        defaultMsrp: 54.99  },
-  { patterns: ['booster bundle'],                  label: 'Booster Bundle',           slug: 'booster-bundle',           defaultMsrp: 29.99  },
-  { patterns: ['booster box'],                     label: 'Booster Box',              slug: 'booster-box',              defaultMsrp: 143.64 },
-  { patterns: ['collection box'],                  label: 'Collection Box',           slug: 'collection-box',           defaultMsrp: null   },
+  { patterns: ['super premium collection'],               label: 'Super Premium Collection', slug: 'super-premium-collection', defaultMsrp: 79.99  },
+  { patterns: ['poster collection'],                      label: 'Poster Collection',        slug: 'poster-collection',        defaultMsrp: 19.99  },
+  { patterns: ['pin collection'],                         label: 'Pin Collection',           slug: 'pin-collection',           defaultMsrp: 14.99  },
+  { patterns: ['premium collection'],                     label: 'Premium Collection',       slug: 'premium-collection',       defaultMsrp: 39.99  },
+  { patterns: ['elite trainer box', ' etb '],             label: 'ETB',                      slug: 'elite-trainer-box',        defaultMsrp: 54.99  },
+  { patterns: ['booster bundle'],                         label: 'Booster Bundle',           slug: 'booster-bundle',           defaultMsrp: 29.99  },
+  { patterns: ['booster box'],                            label: 'Booster Box',              slug: 'booster-box',              defaultMsrp: 143.64 },
+  { patterns: ['3-pack blister', '3 pack blister', 'three pack blister'], label: '3-Pack Blister', slug: '3-pack-blister', defaultMsrp: 11.99 },
+  { patterns: ['collection box'],                         label: 'Collection Box',           slug: 'collection-box',           defaultMsrp: null   },
 ];
 
 /**
