@@ -59,6 +59,31 @@ function fetchPriceCharting(product) {
     console.log(`  [pricing] PriceCharting scrape for: ${product.name}`);
     const md = scrape(url);
     if (!md) return null;
+
+    // Try to extract the Ungraded price from the price table
+    // The table format is:
+    //   | Ungraded | Grade 7 | Grade 8 | ... |
+    //   | --- | --- | --- | ... |
+    //   | $123.05<br> <br> +$5.47 | - | - | ... |
+    const lines = md.split('\n');
+    for (let i = 0; i < lines.length; i++) {
+      // Look for the "Ungraded" header row (and exclude the chart legend)
+      if (lines[i].includes('| Ungraded |') && !lines[i].includes('View')) {
+        // The price row is 2 lines after the header
+        const priceLine = lines[i + 2];
+        if (priceLine) {
+          const priceMatch = priceLine.match(/\|\s*\$(\d+\.\d{2})/);
+          if (priceMatch) {
+            const price = parseFloat(priceMatch[1]);
+            if (price >= product.msrp * 0.5 && price <= product.msrp * 15) {
+              return price;
+            }
+          }
+        }
+      }
+    }
+
+    // Fallback: use the general price parser
     const prices = parsePrices(md, product.msrp);
     return prices.length > 0 ? prices[0] : null;
   } catch (err) {
