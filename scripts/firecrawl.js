@@ -6,10 +6,17 @@
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const os = require('os');
+
+// Setup local temp directory for firecrawl output (avoids Windows path issues)
+const TEMP_DIR = path.join(__dirname, '..', '.firecrawl', 'temp');
+if (!fs.existsSync(TEMP_DIR)) fs.mkdirSync(TEMP_DIR, { recursive: true });
 
 function tmpPath(prefix) {
-  return path.join(os.tmpdir(), `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  return path.join(TEMP_DIR, `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+}
+
+function toUnixPath(p) {
+  return p.replace(/\\/g, '/');
 }
 
 function ensureAuth() {
@@ -32,7 +39,7 @@ function search(query, opts = {}) {
 
   try {
     execSync(
-      `firecrawl search ${JSON.stringify(query)} --limit ${limit} ${tbs} --json -o ${JSON.stringify(out)}`,
+      `firecrawl search ${JSON.stringify(query)} --limit ${limit} ${tbs} --json -o "${toUnixPath(out)}"`,
       { env: process.env, stdio: ['ignore', 'ignore', 'pipe'] }
     );
     const raw = fs.readFileSync(out, 'utf8');
@@ -57,7 +64,7 @@ function scrape(url) {
 
   try {
     execSync(
-      `firecrawl scrape ${JSON.stringify(url)} --only-main-content -o ${JSON.stringify(out)}`,
+      `firecrawl scrape ${JSON.stringify(url)} --only-main-content -o "${toUnixPath(out)}"`,
       { env: process.env, stdio: ['ignore', 'ignore', 'pipe'] }
     );
     return fs.readFileSync(out, 'utf8');
@@ -88,7 +95,7 @@ function browserScrape(url) {
       env: process.env,
       stdio: ['ignore', 'ignore', 'pipe'],
     });
-    execSync(`firecrawl browser "scrape --only-main-content" -o ${JSON.stringify(out)}`, {
+    execSync(`firecrawl browser "scrape --only-main-content" -o "${toUnixPath(out)}"`, {
       env: process.env,
       stdio: ['ignore', 'ignore', 'pipe'],
     });
