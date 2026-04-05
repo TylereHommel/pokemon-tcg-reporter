@@ -2,7 +2,3 @@ node_modules/
 .env
 .firecrawl/
 *.log
-chrome-profile-bestbuy/
-docs/
-frontend/
-Start-up Scripts/
