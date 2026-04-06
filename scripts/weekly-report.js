@@ -64,12 +64,12 @@ async function main() {
   // Process all products (static + auto-detected), sorted by tier
   const sortedProducts = [...getAllProducts()].sort((a, b) => a.tier - b.tier);
 
-  // Investment-focused queries to surface resell/hype discussion per set
+  // Mix of positive and negative queries so the ratio produces natural variation
   const setNames = [...new Set(sortedProducts.map(p => p.name.split(' ').slice(0, 2).join(' ')))];
   const QUERIES = [
-    ...setNames.map(s => `pokemon "${s}" resell worth reddit`),
-    'pokemon tcg sealed flip profit worth buying reddit 2026',
-    'pokemon tcg sold out restock price 2026 reddit',
+    ...setNames.map(s => `pokemon "${s}" hype resell reddit 2026`),
+    'pokemon tcg 2026 sealed worth buying invest reddit',
+    'pokemon tcg 2026 skip overpriced disappointing not worth reddit',
   ];
 
   console.log('[weekly-report] Fetching sentiment data...');
