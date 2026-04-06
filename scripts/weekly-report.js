@@ -59,12 +59,15 @@ function scoreSentiment(results, product) {
 async function main() {
   console.log('[weekly-report] Starting run at', new Date().toISOString());
 
-  // Run 4 sentiment searches
+  // Process all products (static + auto-detected), sorted by tier
+  const sortedProducts = [...getAllProducts()].sort((a, b) => a.tier - b.tier);
+
+  // Run targeted searches per set so results actually contain product names
+  const setNames = [...new Set(sortedProducts.map(p => p.name.split(' ').slice(0, 2).join(' ')))];
   const QUERIES = [
-    'pokemon tcg 2026 most hyped products resell profit site:reddit.com',
-    'pokemon tcg 2026 best sets to buy chase cards',
-    'pokemon tcg sealed product market price investment 2026',
-    'pokemon tcg sold out restock hype demand 2026',
+    ...setNames.map(s => `pokemon "${s}" hype resell reddit 2026`),
+    'pokemon tcg sealed investment flip profit 2026 site:reddit.com',
+    'pokemon tcg sold out restock price spike 2026',
   ];
 
   console.log('[weekly-report] Fetching sentiment data...');
@@ -74,9 +77,6 @@ async function main() {
     allResults.push(...results);
   }
   console.log(`[weekly-report] Got ${allResults.length} sentiment results`);
-
-  // Process all products (static + auto-detected), sorted by tier
-  const sortedProducts = [...getAllProducts()].sort((a, b) => a.tier - b.tier);
   const entries = [];
 
   for (const product of sortedProducts) {
