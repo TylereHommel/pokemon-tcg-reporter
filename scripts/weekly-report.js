@@ -2,7 +2,7 @@
 // Runs every Sunday at 9am PST via GitHub Actions.
 // Searches for sentiment data, fetches pricing, posts one embed per product.
 
-const { search } = require('./firecrawl');
+const { search } = require('./apify');
 const { fetchPricing } = require('./pricing');
 const { postWebhook, buildWeeklyReportEmbed } = require('./discord');
 const { getAllProducts } = require('./products');
@@ -73,7 +73,7 @@ async function main() {
   console.log('[weekly-report] Fetching sentiment data...');
   const allResults = [];
   for (const query of QUERIES) {
-    const results = search(query, { limit: 10 });
+    const results = await search(query, { limit: 10 });
     allResults.push(...results);
   }
   console.log(`[weekly-report] Got ${allResults.length} sentiment results`);
@@ -86,7 +86,7 @@ async function main() {
     console.log(`  Sentiment: score=${sentiment.score}, bias=${sentiment.biasScore}`);
 
     console.log(`  Fetching pricing...`);
-    const pricing = fetchPricing(product);
+    const pricing = await fetchPricing(product);
     console.log(`  Pricing: pricecharting=$${pricing.pricechartingValue}, avg10=$${pricing.avgLast10}`);
 
     entries.push({ product, pricing, sentiment });

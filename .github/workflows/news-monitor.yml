@@ -22,12 +22,8 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install Firecrawl CLI
-        run: npm install -g firecrawl-cli
-
       - name: Run news monitor
         env:
-          FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API_KEY }}
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: node scripts/news-monitor.js
 

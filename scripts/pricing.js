@@ -1,10 +1,9 @@
 // scripts/pricing.js
-// Fetches pricing data for a product:
-//   - eBay sold listings (browser scrape for JS-rendered page)
-//   - PriceCharting market value (static scrape)
-// Returns a normalized pricing object.
+// Fetches pricing data for a product via PriceCharting (static HTML scrape).
+// eBay browser scraping removed — blocked by bot detection.
+// All functions are async.
 
-const { scrape, browserScrape } = require('./firecrawl');
+const { scrape } = require('./apify');
 
 function parsePrices(text, msrp) {
   const prices = [];
@@ -19,72 +18,25 @@ function parsePrices(text, msrp) {
   return prices;
 }
 
-function parseRecentDate(text) {
-  const dateRegex = /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2}\b/;
-  const match = text.match(dateRegex);
-  return match ? match[0] : null;
-}
-
-function fetchEbaySoldPrices(product) {
-  try {
-    const query = encodeURIComponent(`${product.ebaySearchTerm} sealed`);
-    const url = `https://www.ebay.com/sch/i.html?_nkw=${query}&LH_Sold=1&LH_Complete=1&_sop=13`;
-    console.log(`  [pricing] eBay browser scrape for: ${product.name}`);
-    const md = browserScrape(url);
-    if (!md) {
-      console.warn(`  [pricing] eBay browser scrape returned empty for ${product.name}`);
-      return { mostRecentSale: null, avgLast10: null };
-    }
-    const prices = parsePrices(md, product.msrp);
-    if (prices.length === 0) {
-      return { mostRecentSale: null, avgLast10: null };
-    }
-    const recentDate = parseRecentDate(md);
-    const mostRecentSale = {
-      price: prices[0],
-      date: recentDate || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-    };
-    const last10 = prices.slice(0, 10);
-    const avgLast10 = last10.reduce((a, b) => a + b, 0) / last10.length;
-    return { mostRecentSale, avgLast10: Math.round(avgLast10 * 100) / 100 };
-  } catch (err) {
-    console.error(`  [pricing] eBay fetch failed for ${product.name}:`, err.message);
-    return { mostRecentSale: null, avgLast10: null };
-  }
-}
-
-function fetchPriceCharting(product) {
+async function fetchPriceCharting(product) {
   try {
     const url = `https://www.pricecharting.com/game/${product.pricechartingSet}/${product.pricechartingProduct}`;
     console.log(`  [pricing] PriceCharting scrape for: ${product.name}`);
-    const md = scrape(url);
-    if (!md) return null;
+    const text = await scrape(url);
+    if (!text) return null;
 
-    // Try to extract the Ungraded price from the price table
-    // The table format is:
-    //   | Ungraded | Grade 7 | Grade 8 | ... |
-    //   | --- | --- | --- | ... |
-    //   | $123.05<br> <br> +$5.47 | - | - | ... |
-    const lines = md.split('\n');
-    for (let i = 0; i < lines.length; i++) {
-      // Look for the "Ungraded" header row (and exclude the chart legend)
-      if (lines[i].includes('| Ungraded |') && !lines[i].includes('View')) {
-        // The price row is 2 lines after the header
-        const priceLine = lines[i + 2];
-        if (priceLine) {
-          const priceMatch = priceLine.match(/\|\s*\$(\d+\.\d{2})/);
-          if (priceMatch) {
-            const price = parseFloat(priceMatch[1]);
-            if (price >= product.msrp * 0.5 && price <= product.msrp * 15) {
-              return price;
-            }
-          }
-        }
+    // Look for price adjacent to "Ungraded" in the plain text
+    const ungradedMatch = text.match(/Ungraded\s*\$(\d+(?:\.\d{2})?)/i)
+      || text.match(/\$(\d+(?:\.\d{2})?)\s{0,30}Ungraded/i);
+    if (ungradedMatch) {
+      const price = parseFloat(ungradedMatch[1]);
+      if (price >= product.msrp * 0.5 && price <= product.msrp * 15) {
+        return price;
       }
     }
 
-    // Fallback: use the general price parser
-    const prices = parsePrices(md, product.msrp);
+    // Fallback: general price parser
+    const prices = parsePrices(text, product.msrp);
     return prices.length > 0 ? prices[0] : null;
   } catch (err) {
     console.error(`  [pricing] PriceCharting fetch failed for ${product.name}:`, err.message);
@@ -92,34 +44,35 @@ function fetchPriceCharting(product) {
   }
 }
 
-function fetchPricing(product) {
-  const { mostRecentSale, avgLast10 } = fetchEbaySoldPrices(product);
-  const pricechartingValue = fetchPriceCharting(product);
+async function fetchPricing(product) {
+  const pricechartingValue = await fetchPriceCharting(product);
 
-  const avgMargin = avgLast10 != null
-    ? Math.round(((avgLast10 - product.msrp) / product.msrp) * 10000) / 100
-    : pricechartingValue != null
-      ? Math.round(((pricechartingValue - product.msrp) / product.msrp) * 10000) / 100
-      : null;
-
-  const recentMargin = mostRecentSale != null
-    ? Math.round(((mostRecentSale.price - product.msrp) / product.msrp) * 10000) / 100
+  const avgMargin = pricechartingValue != null
+    ? Math.round(((pricechartingValue - product.msrp) / product.msrp) * 10000) / 100
     : null;
 
-  return { mostRecentSale, avgLast10, pricechartingValue, avgMargin, recentMargin };
+  return {
+    mostRecentSale: null,
+    avgLast10: null,
+    pricechartingValue,
+    avgMargin,
+    recentMargin: null,
+  };
 }
 
 if (process.argv.includes('--test')) {
-  const { PRODUCTS } = require('./products');
-  const product = PRODUCTS.find(p => p.name === 'Ascended Heroes ETB');
-  console.log(`Testing pricing fetch for: ${product.name}`);
-  const result = fetchPricing(product);
-  console.log('Result:', JSON.stringify(result, null, 2));
-  if (result.pricechartingValue == null && result.avgLast10 == null) {
-    console.warn('WARN: both pricing sources returned null — check network/scrape');
-  } else {
-    console.log('PASS — at least one pricing source returned data');
-  }
+  (async () => {
+    const { PRODUCTS } = require('./products');
+    const product = PRODUCTS.find(p => p.name === 'Ascended Heroes ETB');
+    console.log(`Testing pricing fetch for: ${product.name}`);
+    const result = await fetchPricing(product);
+    console.log('Result:', JSON.stringify(result, null, 2));
+    if (result.pricechartingValue == null) {
+      console.warn('WARN: PriceCharting returned null — check scrape');
+    } else {
+      console.log('PASS');
+    }
+  })();
 }
 
 module.exports = { fetchPricing };

@@ -6,7 +6,8 @@
 
 const path = require('path');
 const fs = require('fs');
-const { search, scrape } = require('./firecrawl');
+const { fetchRecentItems } = require('./rss');
+const { scrape } = require('./apify');
 const { classifyItem } = require('./classify');
 const { postWebhook, buildBreakingEmbed, buildNewProductEmbed } = require('./discord');
 const { getAllProducts } = require('./products');
@@ -73,20 +74,9 @@ function isNewProductAnnouncement(item) {
 async function main() {
   console.log('[news-monitor] Starting run at', new Date().toISOString());
 
-  // Fetch Pokemon TCG news from the last hour
-  const QUERIES = [
-    'pokemon tcg new release announced 2026',
-    'pokemon tcg chase card revealed',
-    'pokemon tcg sold out restock price spike',
-  ];
-
-  const allResults = [];
-  for (const query of QUERIES) {
-    const results = search(query, { limit: 10, tbs: 'qdr:h' });
-    allResults.push(...results);
-  }
-
-  console.log(`[news-monitor] Fetched ${allResults.length} raw results`);
+  // Fetch recent items from RSS feeds (free, no API credits)
+  const allResults = await fetchRecentItems(75);
+  console.log(`[news-monitor] Fetched ${allResults.length} raw results from RSS feeds`);
 
   // Deduplicate by URL
   const seen = new Set();
