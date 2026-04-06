@@ -88,7 +88,7 @@ function scoreSentiment(results, product) {
   // Net score: start neutral at 50, move up/down based on weighted keyword delta.
   // Cap effect at ±40 so extreme scores require strong signal on both sides.
   const net = positiveScore - negativeScore;
-  const score = Math.min(95, Math.max(5, 50 + Math.round(Math.min(40, Math.max(-40, net * 0.8)))));
+  const score = Math.min(95, Math.max(5, 50 + Math.round(Math.min(40, Math.max(-40, net * 1.0)))));
   const mentionRatio = Math.min(1, mentions / Math.max(results.length, 1));
   const biasScore = Math.min(100, Math.round(mentionRatio * 40 + score * 0.6));
 
