@@ -40,15 +40,12 @@ const NEGATIVE_KEYWORDS = [
   { kw: 'skip this set',         w: 3 },
   { kw: 'price dropping',        w: 2 },
   { kw: 'below retail',          w: 2 },
-  { kw: 'not worth',             w: 2 },
   { kw: 'disappointing pulls',   w: 2 },
   { kw: 'bad pulls',             w: 2 },
   { kw: 'crashing',              w: 2 },
-  { kw: 'overpriced',            w: 1 },
-  { kw: 'avoid',                 w: 1 },
-  { kw: 'skip',                  w: 1 },
-  { kw: 'bubble',                w: 1 },
-  { kw: 'tank',                  w: 1 },
+  { kw: 'not selling',           w: 2 },
+  { kw: 'price bubble',          w: 1 },
+  { kw: 'losing value',          w: 1 },
 ];
 
 /**
@@ -91,7 +88,7 @@ function scoreSentiment(results, product) {
   // Net score: start neutral at 50, move up/down based on weighted keyword delta.
   // Cap effect at ±40 so extreme scores require strong signal on both sides.
   const net = positiveScore - negativeScore;
-  const score = Math.min(95, Math.max(5, 50 + Math.round(Math.min(40, Math.max(-40, net * 1.5)))));
+  const score = Math.min(95, Math.max(5, 50 + Math.round(Math.min(40, Math.max(-40, net * 0.8)))));
   const mentionRatio = Math.min(1, mentions / Math.max(results.length, 1));
   const biasScore = Math.min(100, Math.round(mentionRatio * 40 + score * 0.6));
 
