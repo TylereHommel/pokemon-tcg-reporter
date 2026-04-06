@@ -170,15 +170,10 @@ function buildWeeklyReportEmbed(entries) {
     const pricechartingUrl = `https://www.pricecharting.com/game/${product.pricechartingSet}/${product.pricechartingProduct}`;
     const ebayUrl = `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(product.ebaySearchTerm + ' sealed')}&LH_Sold=1&LH_Complete=1&_sop=13`;
 
-    const sourcesLine = (sentiment.sources || []).length > 0
-      ? '📰 ' + sentiment.sources.map((s, i) => `[${i + 1}](${s.url})`).join(' · ')
-      : '';
-
     return [
       `${tierEmoji} **${product.name}**${chase} — [PC](${pricechartingUrl}) · [eBay](${ebayUrl})`,
       `${progressBar(sentiment.score)} ${sentiment.score}/100 | MSRP $${product.msrp.toFixed(2)} | PC ${pcText}${marginText} | ${rec}`,
-      sourcesLine,
-    ].filter(Boolean).join('\n');
+    ].join('\n');
   };
 
   const header = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSourced from Reddit · TCGPlayer · PriceCharting · eBay';
@@ -186,16 +181,37 @@ function buildWeeklyReportEmbed(entries) {
   const tier1Lines = ['**— TIER 1 —**', ...tier1.map(formatEntry).flatMap(l => [l, ''])];
   const tier2Lines = ['**— TIER 2 —**', ...tier2.map(formatEntry).flatMap(l => [l, ''])];
 
+  // Collect unique source URLs per tier for the fields section
+  const buildSourceField = (tierEntries) => {
+    const seen = new Set();
+    const links = [];
+    for (const { sentiment } of tierEntries) {
+      for (const s of (sentiment.sources || [])) {
+        if (!seen.has(s.url)) {
+          seen.add(s.url);
+          links.push(`[${links.length + 1}](${s.url})`);
+          if (links.length >= 8) break;
+        }
+      }
+      if (links.length >= 8) break;
+    }
+    return links.length > 0
+      ? [{ name: '📰 Sentiment Sources', value: links.join(' · '), inline: false }]
+      : [];
+  };
+
   return {
     embeds: [
       {
         title: `🎯 WEEKLY TCG SENTIMENT REPORT — ${formatDate()}`,
         description: [header, '', ...tier1Lines].join('\n').trimEnd(),
+        fields: buildSourceField(tier1),
         color: 0x9B59B6,
         timestamp: new Date().toISOString(),
       },
       {
         description: tier2Lines.join('\n').trimEnd(),
+        fields: buildSourceField(tier2),
         color: 0x9B59B6,
         timestamp: new Date().toISOString(),
       },
