@@ -1,1 +1,46 @@
-{}
+{
+  "Prismatic Evolutions ETB": {
+    "price": 175,
+    "date": "2026-04-06"
+  },
+  "Prismatic Evolutions Super Premium Collection": {
+    "price": 304.99,
+    "date": "2026-04-06"
+  },
+  "Prismatic Evolutions Booster Bundle": {
+    "price": 76,
+    "date": "2026-04-06"
+  },
+  "Destined Rivals ETB": {
+    "price": 175,
+    "date": "2026-04-06"
+  },
+  "Destined Rivals Booster Bundle": {
+    "price": 76,
+    "date": "2026-04-06"
+  },
+  "Destined Rivals Booster Box": {
+    "price": 545,
+    "date": "2026-04-06"
+  },
+  "30th Anniversary First Partner Collection Series 1": {
+    "price": 45,
+    "date": "2026-04-06"
+  },
+  "Journey Together ETB": {
+    "price": 175,
+    "date": "2026-04-06"
+  },
+  "Journey Together Booster Bundle": {
+    "price": 76,
+    "date": "2026-04-06"
+  },
+  "Ascended Heroes ETB": {
+    "price": 123.05,
+    "date": "2026-04-06"
+  },
+  "Mega Evolution Chaos Rising ETB": {
+    "price": 175,
+    "date": "2026-04-06"
+  }
+}
