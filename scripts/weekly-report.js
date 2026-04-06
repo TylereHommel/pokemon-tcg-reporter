@@ -87,8 +87,9 @@ function scoreSentiment(results, product) {
 
   // Net score: start neutral at 50, move up/down based on weighted keyword delta.
   // Cap effect at ±40 so extreme scores require strong signal on both sides.
-  const net = positiveScore - negativeScore;
-  const score = Math.min(95, Math.max(5, 50 + Math.round(Math.min(40, Math.max(-40, net * 1.0)))));
+  // Ratio formula — naturally spreads scores. Cap at 88 to prevent false 100s.
+  const total = positiveScore + negativeScore || 1;
+  const score = Math.min(88, Math.max(12, Math.round((positiveScore / total) * 100)));
   const mentionRatio = Math.min(1, mentions / Math.max(results.length, 1));
   const biasScore = Math.min(100, Math.round(mentionRatio * 40 + score * 0.6));
 
@@ -108,12 +109,12 @@ async function main() {
   // Process all products (static + auto-detected), sorted by tier
   const sortedProducts = [...getAllProducts()].sort((a, b) => a.tier - b.tier);
 
-  // Neutral queries — no positive bias baked in, let keyword scoring decide
+  // Investment-focused queries to surface resell/hype discussion per set
   const setNames = [...new Set(sortedProducts.map(p => p.name.split(' ').slice(0, 2).join(' ')))];
   const QUERIES = [
-    ...setNames.map(s => `pokemon "${s}" site:reddit.com`),
-    'pokemon tcg 2026 worth buying reddit community',
-    'pokemon tcg 2026 skip avoid reddit discussion',
+    ...setNames.map(s => `pokemon "${s}" resell worth reddit`),
+    'pokemon tcg sealed flip profit worth buying reddit 2026',
+    'pokemon tcg sold out restock price 2026 reddit',
   ];
 
   console.log('[weekly-report] Fetching sentiment data...');
