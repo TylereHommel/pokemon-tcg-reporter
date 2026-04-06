@@ -106,11 +106,27 @@ async function search(query, { limit = 10, tbs } = {}) {
   try {
     const url = `https://api.apify.com/v2/acts/${SEARCH_ACTOR}/run-sync-get-dataset-items?token=${APIFY_TOKEN}&timeout=120`;
     const results = await httpPost(url, input);
-    return (Array.isArray(results) ? results : []).map(r => ({
-      title: r.title || '',
-      url: r.url || '',
-      description: r.description || r.snippet || '',
-    }));
+    const mapped = [];
+    for (const r of (Array.isArray(results) ? results : [])) {
+      // Actor returns one item per SERP page with organicResults nested inside
+      if (r.organicResults && Array.isArray(r.organicResults)) {
+        for (const item of r.organicResults) {
+          mapped.push({
+            title: item.title || '',
+            url: item.url || '',
+            description: item.description || item.snippet || '',
+          });
+        }
+      } else if (r.title) {
+        // Flat format fallback
+        mapped.push({
+          title: r.title || '',
+          url: r.url || '',
+          description: r.description || r.snippet || '',
+        });
+      }
+    }
+    return mapped;
   } catch (err) {
     console.error(`[apify.search] failed for query "${query}":`, err.message);
     return [];
